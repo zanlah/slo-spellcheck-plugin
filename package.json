@@ -1,0 +1,29 @@
+{
+  "name": "word-spellcheck-addin",
+  "version": "1.0.0",
+  "description": "Spell check add-in for Word (Office 365). Run: npm run dev-server (then in another terminal) npm start to sideload.",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev-server": "webpack serve --mode development --open false",
+    "start": "office-addin-dev-settings sideload manifest.xml",
+    "stop": "office-addin-dev-settings uninstall manifest.xml"
+  },
+  "keywords": [
+    "office-add-in",
+    "word",
+    "spell-check"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "copy-webpack-plugin": "^11.0.0",
+    "office-addin-dev-certs": "^1.13.5",
+    "office-addin-dev-settings": "^3.0.6",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "dependencies": {
+    "dictionary-sl": "^3.0.0",
+    "nspell": "^2.1.0"
+  }
+}

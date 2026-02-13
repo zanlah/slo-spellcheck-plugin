@@ -1,0 +1,108 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  background: #ffffff;
+  color: #333333;
+  color-scheme: light;
+}
+
+#app {
+  padding: 12px;
+  max-width: 360px;
+}
+
+header h1 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+button {
+  padding: 8px 14px;
+  font-size: 14px;
+  background: #0078d4;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #106ebe;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 12px;
+  color: #666;
+  min-height: 20px;
+}
+
+.results {
+  margin-top: 12px;
+}
+
+.result-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  border-left: 3px solid #d13438;
+}
+
+.result-item .word {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.result-item .show-btn {
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  background: #fff;
+  color: #666;
+  border: 1px solid #ccc;
+}
+
+.result-item .show-btn:hover {
+  background: #f0f0f0;
+}
+
+.result-item .suggestions {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.result-item .suggestions button {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #fff;
+  color: #0078d4;
+  border: 1px solid #0078d4;
+}
+
+.result-item .suggestions button:hover {
+  background: #e6f2ff;
+}
+
+.no-suggestions {
+  color: #999;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.no-issues {
+  color: #107c10;
+}
