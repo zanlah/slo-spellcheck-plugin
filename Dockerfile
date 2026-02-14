@@ -15,5 +15,5 @@ RUN apk add --no-cache openssl && \
 
 EXPOSE 3000
 
-# Serve dist/ over HTTPS (required by Office add-ins) on 0.0.0.0 for Docker port mapping
+# docker-compose injects BASE_URL and runs manifest substitution + http-server
 CMD ["http-server", "dist", "-p", "3000", "-S", "-C", "cert.pem", "-K", "key.pem", "-a", "0.0.0.0", "--cors"]
