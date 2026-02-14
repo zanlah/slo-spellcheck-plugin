@@ -6,9 +6,17 @@ services:
     environment:
       - "BASE_URL=${BASE_URL:-https://localhost:3000}"
       - PORT=3000
+      # nastav USE_HTTPS=false ko stoji za Coolify/reverse proxy (proxy obravnava SSL)
+      - "USE_HTTPS=${USE_HTTPS:-false}"
     env_file:
       - .env
     command:
       - sh
       - "-c"
-      - 'sed "s|{{BASE_URL}}|$$BASE_URL|g" /app/manifest.xml.template > /app/dist/manifest.xml && exec http-server dist -p 3000 -S -C cert.pem -K key.pem -a 0.0.0.0 --cors'
+      - |
+        sed "s|{{BASE_URL}}|$$BASE_URL|g" /app/manifest.xml.template > /app/dist/manifest.xml
+        if [ "$$USE_HTTPS" = "true" ]; then
+          exec http-server dist -p 3000 -S -C cert.pem -K key.pem -a 0.0.0.0 --cors
+        else
+          exec http-server dist -p 3000 -a 0.0.0.0 --cors
+        fi

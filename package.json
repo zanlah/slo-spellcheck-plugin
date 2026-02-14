@@ -1,7 +1,7 @@
 {
-  "name": "word-spellcheck-addin",
+  "name": "slo-spellcheck-plugin",
   "version": "1.0.0",
-  "description": "Spell check add-in for Word (Office 365). Run: npm run dev-server (then in another terminal) npm start to sideload.",
+  "description": "Crkovalnik za slovenski pravopis, za uporabo v Wordu",
   "scripts": {
     "build": "webpack --mode production",
     "dev-server": "webpack serve --mode development --open false",

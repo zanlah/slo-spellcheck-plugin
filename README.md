@@ -29,7 +29,7 @@ Odstranitev dodataka iz Worda: `npm run stop`.
 
 ---
 
-## Uvedba (deploy) z Dockerjem
+## deploy z Dockerjem
 
 ### 1. Nastavite URL in vrata
 
@@ -47,7 +47,7 @@ Uredite `.env` in nastavite **BASE_URL** na naslov, kjer bo add-in dejansko dost
 Če želite, spremenite tudi **PORT** (vrata na gostitelju, privzeto 3000). Če so vrata 3000 zasedena, v `.env` nastavite npr. **PORT=3001** (in **BASE_URL** ustrezno, npr. `https://localhost:3001`).
 
 **Za Coolify (domena brez vrat, npr. https://crkovalnik.zanlah.si/):**  
-V Coolifyu nastavite domeno in navedite, da kontejner posluša na vratih **3000** (kot pri drugih aplikacijah). V `.env` nastavite **BASE_URL=https://crkovalnik.zanlah.si**. Coolifyov proxy poskrbi za HTTPS in certifikat.
+V Coolifyju nastavite želeno domeno v nastavitvah (General -> Services) in isto domeno vnesite v `.env` kot **BASE_URL=https://crkovalnik.zanlah.si**. V `.env` nastavite tudi **PORT=3000** (številka vrat ni pomembna in je lahko poljubna, saj jo bo Docker Compose samodejno uporabil pri zagonu). Coolify sam poskrbi za HTTPS in certifikat, zato vedno nastavite **USE_HTTPS=false**, ne glede na vrata ali domeno.
 
 ### 2. Zaženite (z gradnjo ali s sliko z Docker Huba)
 
@@ -74,20 +74,22 @@ Strežnik servira vsebino add-ina prek HTTPS na vratih, ki jih določa `PORT`. M
   ```
 - Shranite ga in ga uporabite za **sideload** v Wordu ali naložite v **Office 365 Admin Center** za razdelitev uporabnikom.
 
-### 4. Namestitev v Wordu (sideload)
+### 4. Namestitev v Wordu
 
-V Wordu: **Vstavi** → **Dodatki** → **Moji dodatki** → **Skupna raba mape** (ali **Upravljanje dodatkov** → **Naloži moj dodatek**) in izberite preneseni `manifest.xml`. Dodatek se naloži z vašega `BASE_URL`.
+./install.sh BASE_URL
+
+ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese v [username]/Library/Containers/com.microsoft.Word/Data/Documents/wef
 
 ---
 
 ## Ukazi
 
-| Ukaz | Opis |
-|------|------|
-| `npm run dev-server` | Zažene webpack dev strežnik (HTTPS, vrata 3000). |
-| `npm start` | Sideloada dodatek v Word (zahteva tekoč dev-server). |
-| `npm run stop` | Odstrani sideloadan dodatek iz Worda. |
-| `npm run build` | Production build v mapo `dist/`. |
+| Ukaz                        | Opis                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| `npm run dev-server`        | Zažene webpack dev strežnik (HTTPS, vrata 3000).                             |
+| `npm start`                 | Sideloada dodatek v Word (zahteva tekoč dev-server).                         |
+| `npm run stop`              | Odstrani sideloadan dodatek iz Worda.                                        |
+| `npm run build`             | Production build v mapo `dist/`.                                             |
 | `docker compose up --build` | Zgradi in zažene add-in v Dockerju (uporabi `BASE_URL` in `PORT` iz `.env`). |
 
 ### Nalaganje slike na Docker Hub
@@ -95,13 +97,30 @@ V Wordu: **Vstavi** → **Dodatki** → **Moji dodatki** → **Skupna raba mape*
 Če želite sliko uporabiti drugje brez gradnje, jo zgradite, označite in potisnite:
 
 ```bash
-docker build -t your-dockerhub-username/word-spellcheck-addin:latest .
-docker push your-dockerhub-username/word-spellcheck-addin:latest
+docker build -t your-dockerhub-username/slo-spellcheck-plugin:latest .
+docker push your-dockerhub-username/slo-spellcheck-plugin:latest
 ```
 
-Na drugem strežniku v `.env` nastavite **BASE_URL** (npr. `https://addin.vaša-domena.si`) in po želji **DOCKER_IMAGE** (npr. `your-dockerhub-username/word-spellcheck-addin:latest`), nato `docker compose up -d`. **BASE_URL** se vstavi v manifest ob zagonu posodovja, zato ena slika deluje za različne naslove.
+Na drugem strežniku v `.env` nastavite **BASE_URL** (npr. `https://addin.vaša-domena.si`) in po želji **DOCKER_IMAGE** (npr. `your-dockerhub-username/slo-spellcheck-plugin:latest`), nato `docker compose up -d`. **BASE_URL** se vstavi v manifest ob zagonu posodovja, zato ena slika deluje za različne naslove.
 
 ---
+
+## Preprosta uporaba črkovalnika (za netehnične uporabnike)
+
+Za hitro namestitev lahko preprosto zaženete naslednji ukaz, ki samodejno nastavi vse potrebno:
+
+```
+./install.sh https://crkovalnik.zanlah.si
+```
+
+Skripta bo s strežnika prenesla ustrezen manifest.xml, ga shranila v vašo Wordovo mapo ([username]/Library/Containers/com.microsoft.Word/Data/Documents/wef) in nastavila, da Word uporablja moj gostovani črkovalnik. Tako ste pripravljeni na uporabo brez dodatne konfiguracije.
+
+## Vklop črkovalnika v Office 365 na macOS
+
+1. Odprite Word in pojdite v **Home** > **Add-ins**.
+2. Pod zavihkom **Developer Add-ins** poiščite "Črkovalnik" z ikono slovenske zastave.
+3. Če dodatka ne vidite takoj, zaprite Word in ga ponovno odprite – včasih je treba program znova zagnati, da se novi dodatek prikaže.
+4. Kliknite na dodatek, da ga aktivirate in začnete uporabljati Slovenian Spell Checker.
 
 ## Licence
 
