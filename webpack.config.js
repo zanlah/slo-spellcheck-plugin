@@ -32,6 +32,10 @@ module.exports = async (env, argv) => {
             to: "dict",
             globOptions: { ignore: ["**/package.json", "**/*.js"] },
           },
+          {
+            from: "src/taskpane/dict/custom.dic",
+            to: "dict/custom.dic",
+          },
         ],
       }),
     ],
