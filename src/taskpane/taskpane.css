@@ -171,11 +171,18 @@ header h1 {
 button {
   padding: 8px 14px;
   font-size: 14px;
-  background: #0078d4;
-  color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 button:hover {
@@ -184,16 +191,54 @@ button:hover {
 
 button:disabled {
   background: #ccc;
+  color: #666;
   cursor: not-allowed;
 }
 
-#read-aloud {
-  margin-left: 8px;
-  background: #107c10;
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-#read-aloud:hover {
-  background: #0e6b0e;
+.action-buttons .btn-primary {
+  background: #0078d4;
+  color: #fff;
+  padding: 7px 12px;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+.action-buttons .btn-primary:hover:not(:disabled) {
+  background: #106ebe;
+}
+
+.action-buttons .btn-secondary {
+  background: #fff;
+  color: #424242;
+  border: 1px solid #d1d1d1;
+  padding: 7px 12px;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+.action-buttons .btn-secondary:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #0078d4;
+  color: #0078d4;
+}
+
+.action-buttons .btn-secondary:disabled {
+  background: #f5f5f5;
+  border-color: #e1e1e1;
+}
+
+.action-buttons .btn-icon {
+  flex-shrink: 0;
+}
+
+.action-buttons button {
+  gap: 6px;
 }
 
 .status {
@@ -237,12 +282,12 @@ button:disabled {
   padding: 2px 8px;
   font-size: 10px;
   background: #fff;
-  color: #107c10;
-  border: 1px solid #107c10;
+  color: #0078d4;
+  border: 1px solid #0078d4;
 }
 
 .result-item .dict-btn:hover {
-  background: #e6f5e6;
+  background: #e6f2ff;
 }
 
 .result-item .suggestions {
@@ -304,7 +349,7 @@ button:disabled {
 }
 
 .no-issues {
-  color: #107c10;
+  color: #0078d4;
 }
 
 .footer {

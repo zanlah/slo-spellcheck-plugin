@@ -1,90 +1,195 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8"/>
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Črkovalnik</title>
-  <link rel="stylesheet" href="taskpane.css"/>
-</head>
-<body>
-  <div id="app">
-    <header>
-      <button id="settings-btn" class="settings-btn" type="button" title="Nastavitve">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.902 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.318.094a1.873 1.873 0 0 0-1.116 2.692l.16.292c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.318a1.873 1.873 0 0 0-2.692-1.116l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291a1.873 1.873 0 0 0-1.116-2.693l-.318-.094c-.835-.246-.835-1.428 0-1.674l.318-.094a1.873 1.873 0 0 0 1.116-2.692l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.116l.094-.318z"/></svg>
-      </button>
-      <h1>Črkovalnik</h1>
-    </header>
-    <main id="main-view">
-      <button id="run-check" type="button">Preveri dokument</button>
-      <button id="read-aloud" type="button">Preberi na glas</button>
-      <div id="status" class="status"></div>
-      <div id="results" class="results"></div>
-    </main>
-    <section id="settings-view" class="settings-view" style="display:none">
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="tab-dict" type="button">Slovar</button>
-        <button class="tab-btn" data-tab="tab-features" type="button">Funkcije</button>
-        <button class="tab-btn" data-tab="tab-contrib" type="button">Prispevki</button>
-      </div>
-      <div id="tab-dict" class="tab-panel">
-        <h2>Uporabniški slovar</h2>
-        <p class="settings-desc">Besede, ki ste jih dodali z gumbom "V slovar".</p>
-        <div id="user-dict-list" class="user-dict-list"></div>
-      </div>
-      <div id="tab-features" class="tab-panel" style="display:none">
-        <h2>Funkcije</h2>
-        <ul class="feature-list">
-          <li>Preverjanje črkovanja s slovenskim slovarjem (nspell)</li>
-          <li>Preverjanje predlogov s/z in k/h</li>
-          <li>Preverjanje ločil in presledkov</li>
-          <li>Uporabniški slovar z možnostjo dodajanja besed</li>
-          <li>Branje označenega besedila na glas (TTS)</li>
-          <li>Predlogi za zamenjavo napačnih besed</li>
-        </ul>
-      </div>
-      <div id="tab-contrib" class="tab-panel" style="display:none">
-        <h2>Prispevki</h2>
-        <p class="settings-desc">Projekt je odprtokoden. Prispevki so dobrodošli!</p>
-        <div class="contrib-list">
-          <div class="contrib-item">
-            <span class="contrib-name">Žan Lah</span>
-            <span class="contrib-role">Avtor</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Črkovalnik</title>
+    <link rel="stylesheet" href="taskpane.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <button
+          id="settings-btn"
+          class="settings-btn"
+          type="button"
+          title="Nastavitve"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-cog-icon lucide-cog"
+          >
+            <path d="M11 10.27 7 3.34" />
+            <path d="m11 13.73-4 6.93" />
+            <path d="M12 22v-2" />
+            <path d="M12 2v2" />
+            <path d="M14 12h8" />
+            <path d="m17 20.66-1-1.73" />
+            <path d="m17 3.34-1 1.73" />
+            <path d="M2 12h2" />
+            <path d="m20.66 17-1.73-1" />
+            <path d="m20.66 7-1.73 1" />
+            <path d="m3.34 17 1.73-1" />
+            <path d="m3.34 7 1.73 1" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="12" cy="12" r="8" />
+          </svg>
+        </button>
+        <h1>Črkovalnik</h1>
+      </header>
+      <main id="main-view">
+        <div class="action-buttons">
+          <button id="run-check" type="button" class="btn-primary">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-book-open-check-icon lucide-book-open-check"
+            >
+              <path d="M12 21V7" />
+              <path d="m16 12 2 2 4-4" />
+              <path
+                d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"
+              />
+            </svg>
+            <span>Preveri dokument</span>
+          </button>
+          <button id="read-aloud" type="button" class="btn-secondary">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              class="btn-icon"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-book-open-text-icon lucide-book-open-text"
+            >
+              <path d="M12 7v14" />
+              <path d="M16 12h2" />
+              <path d="M16 8h2" />
+              <path
+                d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"
+              />
+              <path d="M6 12h2" />
+              <path d="M6 8h2" />
+            </svg>
+            <span>Preberi na glas</span>
+          </button>
+        </div>
+        <div id="status" class="status"></div>
+        <div id="results" class="results"></div>
+      </main>
+      <section id="settings-view" class="settings-view" style="display: none">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="tab-dict" type="button">
+            Slovar
+          </button>
+          <button class="tab-btn" data-tab="tab-features" type="button">
+            Funkcije
+          </button>
+
+          <button class="tab-btn" data-tab="tab-contrib" type="button">
+            Prispevki
+          </button>
+        </div>
+        <div id="tab-dict" class="tab-panel">
+          <h2>Uporabniški slovar</h2>
+          <p class="settings-desc">
+            Besede, ki ste jih dodali z gumbom "V slovar".
+          </p>
+          <div id="user-dict-list" class="user-dict-list"></div>
+        </div>
+        <div id="tab-features" class="tab-panel" style="display: none">
+          <h2>Funkcije</h2>
+          <ul class="feature-list">
+            <li>Preverjanje črkovanja s slovenskim slovarjem (nspell)</li>
+            <li>Preverjanje predlogov s/z in k/h</li>
+            <li>Preverjanje ločil in presledkov</li>
+            <li>Uporabniški slovar z možnostjo dodajanja besed</li>
+            <li>Branje označenega besedila na glas (TTS)</li>
+            <li>Predlogi za zamenjavo napačnih besed</li>
+          </ul>
+          <div style="margin-top: 20px"></div>
+          <h2>Prihaja</h2>
+          <ul class="feature-list">
+            <li>Preverjanje vejic</li>
+          </ul>
+        </div>
+
+        <div id="tab-contrib" class="tab-panel" style="display: none">
+          <h2>Prispevki</h2>
+          <p class="settings-desc">
+            Projekt je odprtokoden. Prispevki so dobrodošli!
+          </p>
+          <div class="contrib-list">
+            <div class="contrib-item">
+              <span class="contrib-name">Žan Lah (zanlah002@gmail.com)</span>
+              <span class="contrib-role">Avtor</span>
+            </div>
+          </div>
+          <div style="margin-top: 20px"></div>
+          <h2 class="contrib-section-title">Slovar</h2>
+          <p class="settings-desc">
+            Slovenski slovar za črkovanje (<a
+              href="https://extensions.libreoffice.org/extensions/slovenian-dictionary-pack/"
+              target="_blank"
+              >dictionary-sl</a
+            >), licenca GPL-3.0 / LGPL-2.1.
+          </p>
+          <div class="contrib-list">
+            <div class="contrib-item">
+              <span class="contrib-name">Amebis, d.o.o.</span>
+              <span class="contrib-role">Avtor slovarja</span>
+            </div>
+            <div class="contrib-item">
+              <span class="contrib-name">Tomaž Erjavec</span>
+              <span class="contrib-role">Avtor slovarja</span>
+            </div>
+            <div class="contrib-item">
+              <span class="contrib-name">Aleš Košir</span>
+              <span class="contrib-role">Avtor slovarja</span>
+            </div>
+            <div class="contrib-item">
+              <span class="contrib-name">Primož Peterlin</span>
+              <span class="contrib-role">Avtor slovarja</span>
+            </div>
+            <div class="contrib-item">
+              <span class="contrib-name">Robert Ludvik</span>
+              <span class="contrib-role">Datoteka pripon</span>
+            </div>
+            <div class="contrib-item">
+              <span class="contrib-name">Martin Srebotnjak</span>
+              <span class="contrib-role">Razširitev OOo</span>
+            </div>
           </div>
         </div>
-        <h2 class="contrib-section-title">Slovar</h2>
-        <p class="settings-desc">Slovenski slovar za črkovanje (<a href="https://extensions.libreoffice.org/extensions/slovenian-dictionary-pack/" target="_blank">dictionary-sl</a>), licenca GPL-3.0 / LGPL-2.1.</p>
-        <div class="contrib-list">
-          <div class="contrib-item">
-            <span class="contrib-name">Amebis, d.o.o.</span>
-            <span class="contrib-role">Avtor slovarja</span>
-          </div>
-          <div class="contrib-item">
-            <span class="contrib-name">Tomaž Erjavec</span>
-            <span class="contrib-role">Avtor slovarja</span>
-          </div>
-          <div class="contrib-item">
-            <span class="contrib-name">Aleš Košir</span>
-            <span class="contrib-role">Avtor slovarja</span>
-          </div>
-          <div class="contrib-item">
-            <span class="contrib-name">Primož Peterlin</span>
-            <span class="contrib-role">Avtor slovarja</span>
-          </div>
-          <div class="contrib-item">
-            <span class="contrib-name">Robert Ludvik</span>
-            <span class="contrib-role">Datoteka pripon</span>
-          </div>
-          <div class="contrib-item">
-            <span class="contrib-name">Martin Srebotnjak</span>
-            <span class="contrib-role">Razširitev OOo</span>
-          </div>
-        </div>
-      </div>
-      <footer class="footer">vibecoded with &lt;3 by <a href="https://zanlah.si" target="_blank">Žan Lah</a></footer>
-    </section>
-  </div>
-  <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
-  <script src="taskpane.js"></script>
-</body>
+        <footer class="footer">
+          vibecoded with &lt;3 by
+          <a href="https://zanlah.si" target="_blank">Žan Lah</a>
+        </footer>
+      </section>
+    </div>
+    <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+    <script src="taskpane.js"></script>
+  </body>
 </html>

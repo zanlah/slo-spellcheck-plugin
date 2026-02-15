@@ -2,6 +2,17 @@
 
 Dodatek za Microsoft Word (Office 365), ki preverja pravopis v slovenščini in ponuja predloge popravkov. Uporablja slovar iz projekta LibreOffice (Hunspell).
 
+## Klasična uporaba (za netehnične uporabnike)
+
+1. odprite terminal
+2. zaženite
+
+```bash
+  bash ./install.sh https://crkovalnik.zanlah.si
+```
+
+ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese v [username]/Library/Containers/com.microsoft.Word/Data/Documents/wef
+
 ## Zahteve
 
 - **Node.js** 18+ in **npm** (za lokalni razvoj in gradnjo)
@@ -23,9 +34,9 @@ Dodatek za Microsoft Word (Office 365), ki preverja pravopis v slovenščini in 
    ```bash
    npm start
    ```
-4. Odprite Word in odprite nalogo Črkovalnik.
+4. Odprite Word in odprite add-in "Črkovalnik".
 
-Odstranitev dodataka iz Worda: `npm run stop`.
+Odstranitev add-in_a iz Worda: `npm run stop`.
 
 ---
 
@@ -73,12 +84,6 @@ Strežnik servira vsebino add-ina prek HTTPS na vratih, ki jih določa `PORT`. M
   https://vaš-strežnik:3000/manifest.xml
   ```
 - Shranite ga in ga uporabite za **sideload** v Wordu ali naložite v **Office 365 Admin Center** za razdelitev uporabnikom.
-
-### 4. Namestitev v Wordu
-
-./install.sh BASE_URL
-
-ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese v [username]/Library/Containers/com.microsoft.Word/Data/Documents/wef
 
 ---
 
