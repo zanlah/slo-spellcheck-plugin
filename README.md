@@ -1,17 +1,29 @@
 # Črkovalnik — Word add-in za slovenski pravopis
 
-Dodatek za Microsoft Word (Office 365), ki preverja pravopis v slovenščini in ponuja predloge popravkov. Uporablja slovar iz projekta LibreOffice (Hunspell).
+Dodatek za Microsoft Word (Office 365), ki preverja pravopis v slovenščini in ponuja predloge popravkov. Uporablja slovar iz projekta LibreOffice (Hunspell). Črkovalnik je nastal, ker Microsoft Office na macOS še vedno ne podpira slovenskega črkovalnika.
 
 ## Klasična uporaba (za netehnične uporabnike)
 
-1. odprite terminal
-2. zaženite
+1. prenesite [install.sh](https://github.com/zanlah/slo-spellcheck-plugin/blob/master/install.sh)
+2. odprite terminal (v isti mapi kot je install.sh)
+3. zaženite
 
 ```bash
   bash ./install.sh https://crkovalnik.zanlah.si
 ```
 
 ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese v [username]/Library/Containers/com.microsoft.Word/Data/Documents/wef
+
+## Kaj vse je vključeno
+
+- Preverjanje črkovanja s slovenskim slovarjem (nspell)
+- Preverjanje predlogov s/z in k/h
+- Preverjanje ločil in presledkov
+- Uporabniški slovar z možnostjo dodajanja besed
+- Branje označenega besedila na glas (TTS)
+- Predlogi za zamenjavo napačnih besed
+
+---
 
 ## Zahteve
 
