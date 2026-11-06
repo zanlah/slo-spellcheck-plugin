@@ -4,49 +4,52 @@ import { checkSZ } from "./checkers/predlogi-sz";
 import { checkKH } from "./checkers/predlogi-kh";
 import { checkCommas } from "./checkers/vejice";
 import { checkPunctuation } from "./checkers/locila";
+import { createSpeller } from "./speller";
 
-let nspellInstance = null;
+let spellerPromise = null;
 
-async function loadSpellChecker() {
-  if (nspellInstance) return nspellInstance;
-  const NSpell = (await import("nspell")).default;
+// Word list: Sloleks 3.1 + LibreOffice Hunspell sl_SI, built by scripts/build-dictionary.mjs.
+function loadSpellChecker() {
+  if (!spellerPromise) {
+    spellerPromise = createSpellerFromServer().catch(function (err) {
+      spellerPromise = null;
+      throw err;
+    });
+  }
+  return spellerPromise;
+}
+
+async function createSpellerFromServer() {
   const path = window.location.pathname.replace(/\/[^/]*$/, "");
   const base = window.location.origin + path + (path.endsWith("/") ? "" : "/") + "dict/";
-  const affRes = await fetch(base + "index.aff");
-  const dicRes = await fetch(base + "index.dic");
-  if (!affRes.ok || !dicRes.ok) throw new Error("Dictionary files not found");
-  const aff = await affRes.text();
-  const dic = await dicRes.text();
-  nspellInstance = NSpell(aff, dic);
+  const res = await fetch(base + "sl.dawg");
+  if (!res.ok) throw new Error("Slovar ni na voljo (" + res.status + ")");
+  const speller = createSpeller(await res.arrayBuffer());
 
-  // Load static supplemental dictionary
+  // Static supplemental word list (one word per line)
   try {
     const customRes = await fetch(base + "custom.dic");
     if (customRes.ok) {
-      const customDic = await customRes.text();
-      nspellInstance.personal(customDic);
+      (await customRes.text()).split(/\r?\n/).forEach(function (line) {
+        const w = line.trim();
+        if (w && !w.startsWith("#")) speller.add(w);
+      });
     }
   } catch (e) {
     // custom.dic is optional — ignore errors
   }
 
-  // Load user dictionary from localStorage
-  try {
-    var userWords = JSON.parse(localStorage.getItem("userDict") || "[]");
-    userWords.forEach(function (w) {
-      nspellInstance.add(w);
-    });
-  } catch (e) {
-    // ignore malformed localStorage data
-  }
-
-  return nspellInstance;
+  getUserDictWords().forEach(function (w) {
+    speller.add(w);
+  });
+  return speller;
 }
 
 function tokenize(text) {
   const words = [];
-  // Include Slovenian chars: č, š, ž, ć, đ (and apostrophe for contractions)
-  const re = /[a-zA-ZčćđžšČĆĐŽŠ']+/g;
+  // Letters of any alphabet (č, š, ž, ć, đ, é, ü …), optionally joined by an apostrophe or
+  // hyphen ("e-pošta", "O'Brien"). Leading/trailing quotes and hyphens are not part of a word.
+  const re = /\p{L}+(?:['\u2019-]\p{L}+)*/gu;
   let m;
   while ((m = re.exec(text)) !== null) {
     words.push({ word: m[0], index: m.index });
@@ -236,8 +239,10 @@ function addToUserDict(word) {
     userWords.push(word);
     localStorage.setItem("userDict", JSON.stringify(userWords));
   }
-  if (nspellInstance) {
-    nspellInstance.add(word);
+  if (spellerPromise) {
+    spellerPromise.then(function (speller) {
+      speller.add(word);
+    });
   }
   runSpellCheck();
 }
@@ -249,8 +254,11 @@ function removeFromUserDict(word) {
     userWords.splice(idx, 1);
     localStorage.setItem("userDict", JSON.stringify(userWords));
   }
-  // nspell has no remove — need to rebuild on next check
-  nspellInstance = null;
+  if (spellerPromise) {
+    spellerPromise.then(function (speller) {
+      speller.remove(word);
+    });
+  }
   renderUserDictList();
 }
 
@@ -331,12 +339,11 @@ async function runSpellCheck() {
     setStatus("Preverjanje črkovanja…");
     for (let i = 0; i < words.length; i++) {
       const { word } = words[i];
-      const key = word.toLowerCase();
-      if (seen.has(key)) continue;
-      if (word.length < 2) continue;
-      if (!spell.correct(word)) {
-        seen.add(key);
-        const suggestions = spell.suggest(word);
+      // Exact-case key: "Pariz" is fine but "pariz" is not. Replacement is case-sensitive too.
+      if (word.length < 2 || seen.has(word)) continue;
+      seen.add(word);
+      const suggestions = spell.check(word);
+      if (suggestions) {
         issues.push({ word, suggestions });
       }
     }

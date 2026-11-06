@@ -16,7 +16,7 @@ services:
       - |
         sed "s|{{BASE_URL}}|$$BASE_URL|g" /app/manifest.xml.template > /app/dist/manifest.xml
         if [ "$$USE_HTTPS" = "true" ]; then
-          exec http-server dist -p 3000 -S -C cert.pem -K key.pem -a 0.0.0.0 --cors
+          exec http-server dist -p 3000 -g -S -C cert.pem -K key.pem -a 0.0.0.0 --cors
         else
-          exec http-server dist -p 3000 -a 0.0.0.0 --cors
+          exec http-server dist -p 3000 -g -a 0.0.0.0 --cors
         fi
