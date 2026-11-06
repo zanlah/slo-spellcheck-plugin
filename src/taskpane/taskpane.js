@@ -5,8 +5,33 @@ import { checkKH } from "./checkers/predlogi-kh";
 import { checkCommas } from "./checkers/vejice";
 import { checkPunctuation } from "./checkers/locila";
 import { createSpeller } from "./speller";
+import { loadMorph } from "./morph";
+import { renderParadigms } from "./paradigm-view";
 
 let spellerPromise = null;
+let morphPromise = null;
+
+function dictBaseUrl() {
+  const path = window.location.pathname.replace(/\/[^/]*$/, "");
+  return window.location.origin + path + (path.endsWith("/") ? "" : "/") + "dict/";
+}
+
+// Sloleks lemmas + inflection templates (paradigms and word-form analysis), loaded on first use.
+function loadMorphology() {
+  if (!morphPromise) {
+    morphPromise = fetch(dictBaseUrl() + "sl-morph.bin")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Oblikoslovni podatki niso na voljo (" + res.status + ")");
+        return res.arrayBuffer();
+      })
+      .then(loadMorph)
+      .catch(function (err) {
+        morphPromise = null;
+        throw err;
+      });
+  }
+  return morphPromise;
+}
 
 // Word list: Sloleks 3.1 + LibreOffice Hunspell sl_SI, built by scripts/build-dictionary.mjs.
 function loadSpellChecker() {
@@ -20,8 +45,7 @@ function loadSpellChecker() {
 }
 
 async function createSpellerFromServer() {
-  const path = window.location.pathname.replace(/\/[^/]*$/, "");
-  const base = window.location.origin + path + (path.endsWith("/") ? "" : "/") + "dict/";
+  const base = dictBaseUrl();
   const res = await fetch(base + "sl.dawg");
   if (!res.ok) throw new Error("Slovar ni na voljo (" + res.status + ")");
   const speller = createSpeller(await res.arrayBuffer());
@@ -320,6 +344,7 @@ function toggleSettings() {
   var settingsView = document.getElementById("settings-view");
   var settingsBtn = document.getElementById("settings-btn");
   var isSettings = settingsView.style.display !== "none";
+  document.getElementById("paradigm-view").style.display = "none";
   if (isSettings) {
     settingsView.style.display = "none";
     mainView.style.display = "";
@@ -381,6 +406,74 @@ async function runSpellCheck() {
   } finally {
     btn.disabled = false;
   }
+}
+
+// --- Sklanjanje in spregatev ---
+
+function showParadigmView(show) {
+  document.getElementById("paradigm-view").style.display = show ? "" : "none";
+  document.getElementById("main-view").style.display = show ? "none" : "";
+  document.getElementById("settings-view").style.display = "none";
+  document.getElementById("settings-btn").classList.remove("active");
+}
+
+function setParadigmStatus(msg, isError) {
+  var el = document.getElementById("paradigm-status");
+  el.textContent = msg;
+  el.className = "status" + (isError ? " error" : "");
+}
+
+function firstWordOf(text) {
+  var m = /\p{L}+(?:['\u2019-]\p{L}+)*/u.exec(text || "");
+  return m ? m[0] : "";
+}
+
+function showParadigmFor(word) {
+  var results = document.getElementById("paradigm-results");
+  word = firstWordOf(word);
+  if (!word) {
+    results.innerHTML = "";
+    setParadigmStatus("Vpišite besedo.", true);
+    return Promise.resolve();
+  }
+  document.getElementById("paradigm-input").value = word;
+  setParadigmStatus("Nalaganje…");
+  return loadMorphology()
+    .then(function (morph) {
+      setParadigmStatus("");
+      renderParadigms(results, morph.entries(word), word);
+    })
+    .catch(function (err) {
+      setParadigmStatus("Napaka: " + (err.message || String(err)), true);
+    });
+}
+
+function paradigmFromSelection() {
+  return getSelectedText()
+    .then(function (text) {
+      var word = firstWordOf(text);
+      if (!word) {
+        setParadigmStatus("V dokumentu najprej označite besedo.", true);
+        return;
+      }
+      return showParadigmFor(word);
+    })
+    .catch(function (err) {
+      setParadigmStatus("Napaka: " + (err.message || String(err)), true);
+    });
+}
+
+function openParadigmView() {
+  showParadigmView(true);
+  loadMorphology().catch(function () {}); // start downloading right away
+  getSelectedText()
+    .then(function (text) {
+      if (firstWordOf(text)) return showParadigmFor(text);
+      document.getElementById("paradigm-input").focus();
+    })
+    .catch(function () {
+      document.getElementById("paradigm-input").focus();
+    });
 }
 
 function getSelectedText() {
@@ -453,6 +546,15 @@ Office.onReady(function (info) {
     document.getElementById("run-check").addEventListener("click", runSpellCheck);
     document.getElementById("read-aloud").addEventListener("click", readAloud);
     document.getElementById("settings-btn").addEventListener("click", toggleSettings);
+    document.getElementById("open-paradigm").addEventListener("click", openParadigmView);
+    document.getElementById("paradigm-back").addEventListener("click", function () {
+      showParadigmView(false);
+    });
+    document.getElementById("paradigm-selection").addEventListener("click", paradigmFromSelection);
+    document.getElementById("paradigm-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      showParadigmFor(document.getElementById("paradigm-input").value);
+    });
     document.querySelectorAll(".tab-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         switchTab(btn.getAttribute("data-tab"));

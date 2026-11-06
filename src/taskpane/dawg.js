@@ -11,8 +11,8 @@ function baseOf(ch) {
   return BASE_LETTER[lower] || lower.normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
-export function loadDawg(arrayBuffer) {
-  const view = new DataView(arrayBuffer);
+export function loadDawg(arrayBuffer, byteOffset = 0) {
+  const view = new DataView(arrayBuffer, byteOffset);
   for (let i = 0; i < 8; i++) {
     if (view.getUint8(i) !== MAGIC.charCodeAt(i)) throw new Error("Neveljavna datoteka slovarja");
   }
@@ -22,9 +22,9 @@ export function loadDawg(arrayBuffer) {
   const charWidth = view.getUint32(20, true);
   const pad4 = (n) => (n + 3) & ~3;
 
-  let p = 24;
+  let p = byteOffset + 24;
   const alphabet = new Array(alphaSize);
-  for (let i = 0; i < alphaSize; i++) alphabet[i] = String.fromCharCode(view.getUint16(p + i * 2, true));
+  for (let i = 0; i < alphaSize; i++) alphabet[i] = String.fromCharCode(view.getUint16(p - byteOffset + i * 2, true));
   p += pad4(alphaSize * 2);
   const edges = new Uint32Array(arrayBuffer, p, edgeCount);
   p += edgeCount * 4;
@@ -132,6 +132,7 @@ export function loadDawg(arrayBuffer) {
 
   return {
     wordCount,
+    indexOf,
     has(word) {
       return indexOf(word) >= 0;
     },

@@ -95,10 +95,50 @@
             </svg>
             <span>Preberi na glas</span>
           </button>
+          <button id="open-paradigm" type="button" class="btn-secondary">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18" />
+              <path d="M3 15h18" />
+              <path d="M9 3v18" />
+            </svg>
+            <span>Sklanjanje in spregatev</span>
+          </button>
         </div>
         <div id="status" class="status"></div>
         <div id="results" class="results"></div>
       </main>
+      <section id="paradigm-view" class="paradigm-view" style="display: none">
+        <button id="paradigm-back" type="button" class="back-btn">← Nazaj</button>
+        <h2>Sklanjanje in spregatev</h2>
+        <form id="paradigm-form" class="paradigm-form">
+          <input
+            id="paradigm-input"
+            type="text"
+            placeholder="Vpišite besedo, npr. pes, dober, iti"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="submit" class="btn-primary">Prikaži</button>
+        </form>
+        <button id="paradigm-selection" type="button" class="link-btn">Uporabi označeno besedo v dokumentu</button>
+        <div id="paradigm-status" class="status"></div>
+        <div id="paradigm-results" class="paradigm-results"></div>
+        <p class="settings-desc paradigm-credit">
+          Vir: <a href="http://hdl.handle.net/11356/2080" target="_blank">Sloleks 3.1</a> (CJVT UL), CC BY-SA 4.0
+        </p>
+      </section>
       <section id="settings-view" class="settings-view" style="display: none">
         <div class="tabs">
           <button class="tab-btn active" data-tab="tab-dict" type="button">
@@ -122,8 +162,10 @@
         <div id="tab-features" class="tab-panel" style="display: none">
           <h2>Funkcije</h2>
           <ul class="feature-list">
-            <li>Preverjanje črkovanja s slovenskim slovarjem (nspell)</li>
-            <li>Preverjanje predlogov s/z in k/h</li>
+            <li>Preverjanje črkovanja (Sloleks 3.1 + LibreOffice, ≈ 3,3 milijona oblik)</li>
+            <li>Opozorilo na manjkajoče strešice (drzava → država)</li>
+            <li>Preverjanje predlogov s/z in k/h (tudi pred kraticami in števili)</li>
+            <li>Sklanjanje in spregatev besed</li>
             <li>Preverjanje ločil in presledkov</li>
             <li>Uporabniški slovar z možnostjo dodajanja besed</li>
             <li>Branje označenega besedila na glas (TTS)</li>
@@ -149,6 +191,11 @@
           </div>
           <div style="margin-top: 20px"></div>
           <h2 class="contrib-section-title">Slovar</h2>
+          <p class="settings-desc">
+            Morfološki leksikon
+            <a href="http://hdl.handle.net/11356/2080" target="_blank">Sloleks 3.1</a>
+            (Čibej, J. idr., Center za jezikovne vire in tehnologije UL), licenca CC BY-SA 4.0.
+          </p>
           <p class="settings-desc">
             Slovenski slovar za črkovanje (<a
               href="https://extensions.libreoffice.org/extensions/slovenian-dictionary-pack/"

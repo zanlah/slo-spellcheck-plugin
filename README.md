@@ -21,6 +21,7 @@ ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese 
 - Predlogi, razvrščeni po pogostosti v korpusu Gigafida
 - Preverjanje predlogov s/z in k/h
 - Preverjanje ločil in presledkov
+- Sklanjanje in spregatev: tabele vseh oblik besede (Sloleks 3.1)
 - Uporabniški slovar z možnostjo dodajanja besed
 - Branje označenega besedila na glas (TTS)
 - Predlogi za zamenjavo napačnih besed
