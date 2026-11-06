@@ -57,6 +57,17 @@ function tokenize(text) {
   return words;
 }
 
+// Replace URLs, e-mail addresses and file names with a neutral placeholder so they are not
+// spell/grammar checked. The placeholder is not a letter or punctuation, so it can't create
+// new matches such as "na ." for the punctuation rules.
+function maskNonProse(text) {
+  return text
+    .replace(/https?:\/\/[^\s]+/gi, " \u00A4 ")
+    .replace(/www\.[^\s]+/gi, " \u00A4 ")
+    .replace(/[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu, " \u00A4 ")
+    .replace(/[\p{L}\p{N}_-]+\.(?:docx?|xlsx?|pptx?|pdf|txt|csv|rtf|odt|ods|jpe?g|png|gif|svg|zip|html?|xml|json)\b/giu, " \u00A4 ");
+}
+
 function getDocumentText() {
   return Word.run(function (context) {
     const body = context.document.body;
@@ -330,8 +341,7 @@ async function runSpellCheck() {
     const spell = await loadSpellChecker();
     setStatus("Branje dokumenta…");
     const rawText = await getDocumentText();
-    // Strip URLs so they aren't spell/grammar checked
-    const text = rawText.replace(/https?:\/\/[^\s]+/gi, " ").replace(/www\.[^\s]+/gi, " ");
+    const text = maskNonProse(rawText);
     const words = tokenize(text);
     const seen = new Set();
     const issues = [];
