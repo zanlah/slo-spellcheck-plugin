@@ -56,50 +56,39 @@ Odstranitev add-in_a iz Worda: `npm run stop`.
 
 ---
 
-## deploy z Dockerjem
+## Deploy
 
-### 1. Nastavite URL in vrata
+### Coolify (gradnja neposredno iz repozitorija)
 
-Ustvarite datoteko `.env` (npr. iz primera):
+Coolify sam zgradi sliko iz `Dockerfile` v tem repozitoriju, zato Docker Huba ne potrebujete.
 
-```bash
-cp .env.example .env
-```
+1. **+ New → Application → Public Repository** in vnesite `https://github.com/zanlah/slo-spellcheck-plugin` (za samodejni deploy ob vsakem pushu raje izberite **Private Repository (with GitHub App)**, ki doda webhook).
+2. Branch: `master`, **Build Pack: Dockerfile**.
+3. **Ports Exposes: `3000`**, v **Domains** vpišite `https://crkovalnik.zanlah.si`.
+4. Deploy.
 
-Uredite `.env` in nastavite **BASE_URL** na naslov, kjer bo add-in dejansko dostopen (brez poševnice na koncu):
+Spremenljivk okolja ni treba nastavljati: zagonska skripta (`docker-entrypoint.sh`) vzame domeno iz Coolifyjeve spremenljivke `COOLIFY_URL` in jo vpiše v `manifest.xml`. Če želite drug naslov, nastavite **BASE_URL**. Coolify sam poskrbi za HTTPS, kontejner pa privzeto streže navaden HTTP (`USE_HTTPS=false`).
 
-- **Lokalno preizkušanje:** `BASE_URL=https://localhost:3000`
-- **Produkcija:** npr. `BASE_URL=https://addin.vaša-domena.si`
+Med gradnjo se zaženejo testi (`npm test`); če kateri pade, deploy ne uspe in ostane tekoča prejšnja različica.
 
-Če želite, spremenite tudi **PORT** (vrata na gostitelju, privzeto 3000). Če so vrata 3000 zasedena, v `.env` nastavite npr. **PORT=3001** (in **BASE_URL** ustrezno, npr. `https://localhost:3001`).
-
-**Za Coolify (domena brez vrat, npr. https://crkovalnik.zanlah.si/):**  
-V Coolifyju nastavite želeno domeno v nastavitvah (General -> Services) in isto domeno vnesite v `.env` kot **BASE_URL=https://crkovalnik.zanlah.si**. V `.env` nastavite tudi **PORT=3000** (številka vrat ni pomembna in je lahko poljubna, saj jo bo Docker Compose samodejno uporabil pri zagonu). Coolify sam poskrbi za HTTPS in certifikat, zato vedno nastavite **USE_HTTPS=false**, ne glede na vrata ali domeno.
-
-### 2. Zaženite (z gradnjo ali s sliko z Docker Huba)
-
-**Gradnja iz izvorne kode (privzeto):**
+### Lokalno z Dockerjem
 
 ```bash
+cp .env.example .env   # nastavite BASE_URL, PORT, USE_HTTPS
 docker compose up --build -d
 ```
 
-**Uporaba že naložene slike z Docker Huba:**  
-V `docker-compose.yml` zakomentirajte `build: .` in odkomentirajte vrstico z `image:`. V `.env` nastavite **BASE_URL** in po želji **DOCKER_IMAGE**. Nato:
+Brez `.env` se add-in zažene na `https://localhost:3000` s samopodpisanim certifikatom. Manifest je nato na voljo na `<BASE_URL>/manifest.xml`; uporabite ga za **sideload** v Wordu ali ga naložite v **Office 365 Admin Center**.
+
+### Slika za drug strežnik
 
 ```bash
-docker compose up -d
+docker build -t vaše-ime/slo-spellcheck-plugin:latest .
+docker push vaše-ime/slo-spellcheck-plugin:latest
+docker run -d -p 3000:3000 -e BASE_URL=https://addin.vaša-domena.si vaše-ime/slo-spellcheck-plugin:latest
 ```
 
-Strežnik servira vsebino add-ina prek HTTPS na vratih, ki jih določa `PORT`. Manifest (`manifest.xml`) se ob zagonu posodobi z vašim `BASE_URL`, tako da Word ve, od kje nalagati taskpane in ikone.
-
-### 3. Pridobite manifest za namestitev
-
-- Če add-in servirate na `https://vaš-strežnik:3000`, manifest prenesite z:
-  ```
-  https://vaš-strežnik:3000/manifest.xml
-  ```
-- Shranite ga in ga uporabite za **sideload** v Wordu ali naložite v **Office 365 Admin Center** za razdelitev uporabnikom.
+**BASE_URL** se v manifest vstavi ob zagonu, zato ena slika deluje za različne naslove.
 
 ---
 
@@ -111,18 +100,8 @@ Strežnik servira vsebino add-ina prek HTTPS na vratih, ki jih določa `PORT`. M
 | `npm start`                 | Sideloada dodatek v Word (zahteva tekoč dev-server).                         |
 | `npm run stop`              | Odstrani sideloadan dodatek iz Worda.                                        |
 | `npm run build`             | Production build v mapo `dist/`.                                             |
+| `npm test`                  | Zažene teste.                                                                |
 | `docker compose up --build` | Zgradi in zažene add-in v Dockerju (uporabi `BASE_URL` in `PORT` iz `.env`). |
-
-### Nalaganje slike na Docker Hub
-
-Če želite sliko uporabiti drugje brez gradnje, jo zgradite, označite in potisnite:
-
-```bash
-docker build -t your-dockerhub-username/slo-spellcheck-plugin:latest .
-docker push your-dockerhub-username/slo-spellcheck-plugin:latest
-```
-
-Na drugem strežniku v `.env` nastavite **BASE_URL** (npr. `https://addin.vaša-domena.si`) in po želji **DOCKER_IMAGE** (npr. `your-dockerhub-username/slo-spellcheck-plugin:latest`), nato `docker compose up -d`. **BASE_URL** se vstavi v manifest ob zagonu posodovja, zato ena slika deluje za različne naslove.
 
 ---
 

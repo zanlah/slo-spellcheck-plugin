@@ -1,19 +1,21 @@
-FROM node:20-alpine
-
+# Build stage: install dependencies, run the tests and build dist/.
+FROM node:24-alpine AS build
 WORKDIR /app
-
 COPY package*.json ./
-RUN npm ci && npm install -g http-server
-
+RUN npm ci
 COPY . .
-RUN npm run build
+RUN npm test && npm run build
 
-# Generate self-signed cert for https (http-server -S expects cert.pem and key.pem in cwd)
-RUN apk add --no-cache openssl && \
+# Runtime stage: only the static server and the built files.
+FROM node:24-alpine
+WORKDIR /app
+RUN npm install -g http-server@14 && \
+    apk add --no-cache openssl && \
     openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 \
-    -keyout key.pem -out cert.pem -subj "/CN=localhost"
+      -keyout key.pem -out cert.pem -subj "/CN=localhost"
+COPY --from=build /app/dist ./dist
+COPY manifest.xml docker-entrypoint.sh ./
 
+ENV USE_HTTPS=false
 EXPOSE 3000
-
-# docker-compose injects BASE_URL and runs manifest substitution + http-server
-CMD ["http-server", "dist", "-p", "3000", "-g", "-S", "-C", "cert.pem", "-K", "key.pem", "-a", "0.0.0.0", "--cors"]
+CMD ["sh", "/app/docker-entrypoint.sh"]

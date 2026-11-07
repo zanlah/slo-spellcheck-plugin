@@ -8,7 +8,7 @@
     "start": "office-addin-dev-settings sideload manifest.xml",
     "stop": "office-addin-dev-settings uninstall manifest.xml",
     "build:dict": "node --max-old-space-size=8192 scripts/build-dictionary.mjs",
-    "test": "node --no-warnings --test \"test/*.test.mjs\""
+    "test": "node --no-warnings --test test/*.test.mjs"
   },
   "keywords": [
     "office-add-in",

@@ -15,6 +15,8 @@ Microsoft Word (Office 365) taskpane add-in that provides Slovenian spell checki
 
 - `npm test` — Node's built-in test runner over `test/*.test.mjs` (uses the real dictionary files).
 
+**Deployment:** Coolify builds the `Dockerfile` straight from the repo (multi-stage: `npm test` + build, then `http-server` serving `dist/`). `docker-entrypoint.sh` writes `dist/manifest.xml` with `BASE_URL` (default: Coolify's `COOLIFY_URL`). `docker-compose.yml` is for local use only.
+
 ## Architecture
 
 The entire add-in is a single taskpane with three source files in `src/taskpane/`:
