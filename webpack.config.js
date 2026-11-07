@@ -3,18 +3,20 @@ const CopyPlugin = require("copy-webpack-plugin");
 const zlib = require("zlib");
 const devCerts = require("office-addin-dev-certs");
 
-// Emits dict/sl.dawg.gz next to the word list so `http-server -g` can send it compressed
-// (~6 MB -> ~2.6 MB on the wire).
+// Emits gzipped copies of the binary dictionaries so `http-server -g` can send them
+// compressed (sl.dawg ~6 MB -> 2.6 MB, sl-morph.bin ~7 MB -> 2.3 MB).
 class GzipDictionaryPlugin {
   apply(compiler) {
     compiler.hooks.thisCompilation.tap("GzipDictionaryPlugin", (compilation) => {
       compilation.hooks.processAssets.tap(
         { name: "GzipDictionaryPlugin", stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER },
         (assets) => {
-          const asset = assets["dict/sl.dawg"];
-          if (!asset) return;
-          const gz = zlib.gzipSync(asset.buffer(), { level: 9 });
-          compilation.emitAsset("dict/sl.dawg.gz", new compiler.webpack.sources.RawSource(gz));
+          for (const name of ["dict/sl.dawg", "dict/sl-morph.bin"]) {
+            const asset = assets[name];
+            if (!asset) continue;
+            const gz = zlib.gzipSync(asset.buffer(), { level: 9 });
+            compilation.emitAsset(name + ".gz", new compiler.webpack.sources.RawSource(gz));
+          }
         }
       );
     });
@@ -47,6 +49,7 @@ module.exports = async (env, argv) => {
           { from: "src/taskpane/taskpane.css", to: "taskpane.css" },
           { from: "assets", to: "assets", noErrorOnMissing: true },
           { from: "src/taskpane/dict/sl.dawg", to: "dict/sl.dawg" },
+          { from: "src/taskpane/dict/sl-morph.bin", to: "dict/sl-morph.bin" },
           {
             from: "src/taskpane/dict/custom.dic",
             to: "dict/custom.dic",

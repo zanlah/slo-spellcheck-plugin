@@ -1,37 +1,40 @@
-var S_LETTERS = "cčfhkpsšt";
+import { firstSound, prepositionRegex } from "./izgovor.js";
 
-function correctSZ(nextChar) {
-  var ch = nextChar.toLowerCase();
-  if (S_LETTERS.indexOf(ch) !== -1) return "s";
-  return "z";
-}
+// "s" before voiceless consonants (c, č, ć, f, h, k, p, s, š, t), otherwise "z".
+var S_SOUNDS = "cčćfhkpsšt";
 
 export function checkSZ(text) {
+  return checkPreposition(text, "sz", function (sound) {
+    return S_SOUNDS.indexOf(sound) !== -1 ? "s" : "z";
+  });
+}
+
+export function checkPreposition(text, letters, expected) {
   var issues = [];
   var seen = new Set();
-  var re = /\b([sz])\s+([a-zA-ZčćđžšČĆĐŽŠ]+)/gi;
+  var re = prepositionRegex(letters);
   var m;
   while ((m = re.exec(text)) !== null) {
     var prep = m[1];
     var nextWord = m[2];
-    var nextChar = nextWord.charAt(0);
-    var lower = prep.toLowerCase();
-    var correct = correctSZ(nextChar);
+    // "ob 7. h zjutraj", "5 s": an hour/second unit after a number, not a preposition
+    if (/\d[.]?[ \t\u00A0]*$/.test(text.slice(Math.max(0, m.index - 6), m.index))) continue;
+    var sound = firstSound(nextWord, text.charAt(m.index + m[0].length));
+    if (!sound) continue;
+    var correct = expected(sound);
+    if (prep.toLowerCase() === correct) continue;
 
-    if (lower !== correct) {
-      var original = m[1] + " " + nextWord;
-      var key = original.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      var fixedPrep = prep === prep.toUpperCase() ? correct.toUpperCase() : correct;
-      var suggestion = fixedPrep + " " + nextWord;
-      issues.push({
-        word: original,
-        suggestions: [suggestion],
-        isGrammar: true,
-        grammarType: "predlog",
-      });
-    }
+    // Keep the exact whitespace so the replacement can find it in the document.
+    var original = m[0];
+    if (seen.has(original)) continue;
+    seen.add(original);
+    var fixedPrep = prep === prep.toUpperCase() ? correct.toUpperCase() : correct;
+    issues.push({
+      word: original,
+      suggestions: [fixedPrep + original.slice(1)],
+      isGrammar: true,
+      grammarType: "predlog",
+    });
   }
   return issues;
 }

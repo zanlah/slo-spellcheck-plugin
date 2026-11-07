@@ -5,8 +5,34 @@ import { checkKH } from "./checkers/predlogi-kh";
 import { checkCommas } from "./checkers/vejice";
 import { checkPunctuation } from "./checkers/locila";
 import { createSpeller } from "./speller";
+import { loadMorph } from "./morph.js";
+import { renderParadigms } from "./paradigm-view.js";
+import { createFormChecker } from "./checkers/oblike";
 
 let spellerPromise = null;
+let morphPromise = null;
+
+function dictBaseUrl() {
+  const path = window.location.pathname.replace(/\/[^/]*$/, "");
+  return window.location.origin + path + (path.endsWith("/") ? "" : "/") + "dict/";
+}
+
+// Sloleks lemmas + inflection templates (paradigms and word-form analysis), loaded on first use.
+function loadMorphology() {
+  if (!morphPromise) {
+    morphPromise = fetch(dictBaseUrl() + "sl-morph.bin")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Oblikoslovni podatki niso na voljo (" + res.status + ")");
+        return res.arrayBuffer();
+      })
+      .then(loadMorph)
+      .catch(function (err) {
+        morphPromise = null;
+        throw err;
+      });
+  }
+  return morphPromise;
+}
 
 // Word list: Sloleks 3.1 + LibreOffice Hunspell sl_SI, built by scripts/build-dictionary.mjs.
 function loadSpellChecker() {
@@ -20,8 +46,7 @@ function loadSpellChecker() {
 }
 
 async function createSpellerFromServer() {
-  const path = window.location.pathname.replace(/\/[^/]*$/, "");
-  const base = window.location.origin + path + (path.endsWith("/") ? "" : "/") + "dict/";
+  const base = dictBaseUrl();
   const res = await fetch(base + "sl.dawg");
   if (!res.ok) throw new Error("Slovar ni na voljo (" + res.status + ")");
   const speller = createSpeller(await res.arrayBuffer());
@@ -55,6 +80,17 @@ function tokenize(text) {
     words.push({ word: m[0], index: m.index });
   }
   return words;
+}
+
+// Replace URLs, e-mail addresses and file names with a neutral placeholder so they are not
+// spell/grammar checked. The placeholder is not a letter or punctuation, so it can't create
+// new matches such as "na ." for the punctuation rules.
+function maskNonProse(text) {
+  return text
+    .replace(/https?:\/\/[^\s]+/gi, " \u00A4 ")
+    .replace(/www\.[^\s]+/gi, " \u00A4 ")
+    .replace(/[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu, " \u00A4 ")
+    .replace(/[\p{L}\p{N}_-]+\.(?:docx?|xlsx?|pptx?|pdf|txt|csv|rtf|odt|ods|jpe?g|png|gif|svg|zip|html?|xml|json)\b/giu, " \u00A4 ");
 }
 
 function getDocumentText() {
@@ -118,7 +154,7 @@ function showResults(issues) {
   issues.forEach(function (item) {
     const div = document.createElement("div");
     var extraClass = "";
-    if (item.grammarType === "predlog") extraClass = " grammar-item";
+    if (item.grammarType === "predlog" || item.grammarType === "oblika") extraClass = " grammar-item";
     else if (item.grammarType === "vejica") extraClass = " grammar-item comma-item";
     else if (item.grammarType === "ločilo") extraClass = " grammar-item punct-item";
     div.className = "result-item" + extraClass;
@@ -126,6 +162,8 @@ function showResults(issues) {
     var label = "";
     if (item.grammarType === "predlog") {
       label = '<span class="grammar-label">predlog</span>';
+    } else if (item.grammarType === "oblika") {
+      label = '<span class="grammar-label">' + escapeHtml(item.rule || "oblika") + "</span>";
     } else if (item.grammarType === "vejica") {
       label = '<span class="grammar-label comma-label">vejica</span>';
     } else if (item.grammarType === "ločilo") {
@@ -309,6 +347,7 @@ function toggleSettings() {
   var settingsView = document.getElementById("settings-view");
   var settingsBtn = document.getElementById("settings-btn");
   var isSettings = settingsView.style.display !== "none";
+  document.getElementById("paradigm-view").style.display = "none";
   if (isSettings) {
     settingsView.style.display = "none";
     mainView.style.display = "";
@@ -330,8 +369,7 @@ async function runSpellCheck() {
     const spell = await loadSpellChecker();
     setStatus("Branje dokumenta…");
     const rawText = await getDocumentText();
-    // Strip URLs so they aren't spell/grammar checked
-    const text = rawText.replace(/https?:\/\/[^\s]+/gi, " ").replace(/www\.[^\s]+/gi, " ");
+    const text = maskNonProse(rawText);
     const words = tokenize(text);
     const seen = new Set();
     const issues = [];
@@ -355,7 +393,21 @@ async function runSpellCheck() {
     // var commaIssues = checkCommas(text);
     // Check punctuation spacing (ločila in presledki)
     var punctIssues = checkPunctuation(text);
-    var grammarIssues = szIssues.concat(khIssues, punctIssues);
+    // Case/number after prepositions and numerals (needs the Sloleks morphology data)
+    var formIssues = [];
+    try {
+      setStatus("Preverjanje sklonov in števil…");
+      var formChecker = createFormChecker(await loadMorphology());
+      var seenForms = new Set();
+      formIssues = formChecker.check(text).filter(function (i) {
+        if (seenForms.has(i.word)) return false;
+        seenForms.add(i.word);
+        return true;
+      });
+    } catch (e) {
+      // Morphology data unavailable: the other checks still work
+    }
+    var grammarIssues = szIssues.concat(khIssues, formIssues, punctIssues);
     var allIssues = grammarIssues.concat(issues);
 
     var spellCount = issues.length;
@@ -371,6 +423,74 @@ async function runSpellCheck() {
   } finally {
     btn.disabled = false;
   }
+}
+
+// --- Sklanjanje in spregatev ---
+
+function showParadigmView(show) {
+  document.getElementById("paradigm-view").style.display = show ? "" : "none";
+  document.getElementById("main-view").style.display = show ? "none" : "";
+  document.getElementById("settings-view").style.display = "none";
+  document.getElementById("settings-btn").classList.remove("active");
+}
+
+function setParadigmStatus(msg, isError) {
+  var el = document.getElementById("paradigm-status");
+  el.textContent = msg;
+  el.className = "status" + (isError ? " error" : "");
+}
+
+function firstWordOf(text) {
+  var m = /\p{L}+(?:['\u2019-]\p{L}+)*/u.exec(text || "");
+  return m ? m[0] : "";
+}
+
+function showParadigmFor(word) {
+  var results = document.getElementById("paradigm-results");
+  word = firstWordOf(word);
+  if (!word) {
+    results.innerHTML = "";
+    setParadigmStatus("Vpišite besedo.", true);
+    return Promise.resolve();
+  }
+  document.getElementById("paradigm-input").value = word;
+  setParadigmStatus("Nalaganje…");
+  return loadMorphology()
+    .then(function (morph) {
+      setParadigmStatus("");
+      renderParadigms(results, morph.entries(word), word);
+    })
+    .catch(function (err) {
+      setParadigmStatus("Napaka: " + (err.message || String(err)), true);
+    });
+}
+
+function paradigmFromSelection() {
+  return getSelectedText()
+    .then(function (text) {
+      var word = firstWordOf(text);
+      if (!word) {
+        setParadigmStatus("V dokumentu najprej označite besedo.", true);
+        return;
+      }
+      return showParadigmFor(word);
+    })
+    .catch(function (err) {
+      setParadigmStatus("Napaka: " + (err.message || String(err)), true);
+    });
+}
+
+function openParadigmView() {
+  showParadigmView(true);
+  loadMorphology().catch(function () {}); // start downloading right away
+  getSelectedText()
+    .then(function (text) {
+      if (firstWordOf(text)) return showParadigmFor(text);
+      document.getElementById("paradigm-input").focus();
+    })
+    .catch(function () {
+      document.getElementById("paradigm-input").focus();
+    });
 }
 
 function getSelectedText() {
@@ -443,6 +563,15 @@ Office.onReady(function (info) {
     document.getElementById("run-check").addEventListener("click", runSpellCheck);
     document.getElementById("read-aloud").addEventListener("click", readAloud);
     document.getElementById("settings-btn").addEventListener("click", toggleSettings);
+    document.getElementById("open-paradigm").addEventListener("click", openParadigmView);
+    document.getElementById("paradigm-back").addEventListener("click", function () {
+      showParadigmView(false);
+    });
+    document.getElementById("paradigm-selection").addEventListener("click", paradigmFromSelection);
+    document.getElementById("paradigm-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      showParadigmFor(document.getElementById("paradigm-input").value);
+    });
     document.querySelectorAll(".tab-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         switchTab(btn.getAttribute("data-tab"));

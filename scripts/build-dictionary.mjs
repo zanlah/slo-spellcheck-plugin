@@ -17,10 +17,12 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodeDawg } from "./dawg-encode.mjs";
+import { MorphBuilder } from "./morph-build.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 const OUT = join(root, "src/taskpane/dict/sl.dawg");
+const MORPH_OUT = join(root, "src/taskpane/dict/sl-morph.bin");
 
 // A token as produced by the add-in tokenizer: letters, optionally joined by ' or -.
 const WORD_RE = /^\p{L}+(?:['-]\p{L}+)*$/u;
@@ -45,9 +47,14 @@ const freq = new Map();
 const autoProper = new Map();
 let rows = 0;
 let skippedNonStandard = 0;
+const morph = new MorphBuilder();
+
+function normalize(form) {
+  return unescapeXml(form).replace(/\u2019/g, "'");
+}
 
 function clean(form) {
-  form = unescapeXml(form).replace(/’/g, "'");
+  form = normalize(form);
   return WORD_RE.test(form) ? form : null;
 }
 
@@ -72,22 +79,34 @@ function extractPart(name) {
     let norm = "";
     let wfNorm = "";
     let entry = null; // autoProper record for the current entry, if any
+    let autoLemma = null; // cleaned lemma if this entry is an unchecked proper noun
+    let category = "";
+    let lex = {};
+    let msd = "";
+    let wfFeats = {};
+    let entryForms = []; // [msd, features, form] of standard forms, for the morphology data
 
     rl.on("line", (line) => {
       const s = line.trimStart();
       if (s.charCodeAt(0) !== 60 /* < */) return;
       if (s.startsWith("<entry")) {
-        status = lemma = "";
+        status = lemma = category = "";
         proper = false;
         lemmaFreq = 0;
         inHead = false;
         entry = null;
+        autoLemma = null;
+        lex = {};
+        entryForms = [];
+      } else if (s.startsWith("</entry>")) {
+        morph.addEntry(normalize(lemma), category, lex, lemmaFreq, entryForms, autoLemma);
       } else if (s.startsWith("<head>")) {
         inHead = true;
       } else if (s.startsWith("</head>")) {
         inHead = false;
         if (status === "AUTOMATIC" && proper) {
           const l = clean(lemma);
+          autoLemma = l;
           if (l) {
             entry = autoProper.get(l);
             if (!entry) autoProper.set(l, (entry = { freq: 0, forms: new Map() }));
@@ -100,13 +119,26 @@ function extractPart(name) {
         status = s.slice(8, s.indexOf("<", 8));
       } else if (inHead && s.startsWith("<lemma>")) {
         lemma = s.slice(7, s.indexOf("<", 7));
-      } else if (inHead && s.startsWith('<grammarFeature name="type">proper')) {
-        proper = true;
+      } else if (inHead && s.startsWith("<category>")) {
+        category = s.slice(10, s.indexOf("<", 10));
+      } else if (s.startsWith("<grammarFeature ")) {
+        const m = /^<grammarFeature name="([^"]+)">([^<]*)</.exec(s);
+        if (!m) return;
+        if (inHead) {
+          lex[m[1]] = m[2];
+          if (m[1] === "type" && m[2] === "proper") proper = true;
+        } else {
+          wfFeats[m[1]] = m[2];
+        }
+      } else if (s.startsWith("<msd")) {
+        msd = s.slice(s.indexOf(">") + 1, s.indexOf("</"));
       } else if (inHead && s.startsWith('<measure type="frequency"')) {
         lemmaFreq = parseInt(s.slice(s.indexOf(">") + 1), 10) || 0;
       } else if (s.startsWith("<wordForm")) {
         const m = /norm="([^"]*)"/.exec(s);
         wfNorm = m ? m[1] : "";
+        msd = "";
+        wfFeats = {};
       } else if (s.startsWith("<orthography")) {
         const m = /norm="([^"]*)"/.exec(s);
         norm = m ? m[1] : wfNorm;
@@ -125,6 +157,7 @@ function extractPart(name) {
           skippedNonStandard++;
           return;
         }
+        entryForms.push([msd, wfFeats, normalize(form)]);
         const w = clean(form);
         if (!w) return;
         if (entry) bump(entry.forms, w, f);
@@ -201,16 +234,19 @@ function mergeAutoProper() {
     }
     return false;
   };
+  const droppedLemmas = new Set();
   let dropped = 0;
   let droppedForms = 0;
   let junk = 0;
   for (const [lemma, { freq: lf, forms }] of autoProper) {
     if (JUNK_CASE_RE.test(lemma)) {
       junk++;
+      droppedLemmas.add(lemma);
       continue;
     }
     if (nearDuplicate(lemma, lf)) {
       dropped++;
+      droppedLemmas.add(lemma);
       continue;
     }
     for (const [w, f] of forms) {
@@ -219,6 +255,7 @@ function mergeAutoProper() {
     }
   }
   console.log(`  unchecked proper nouns: ${autoProper.size} lemmas; dropped ${dropped} near-duplicate lemmas, ${droppedForms} near-duplicate forms, ${junk} case-junk lemmas`);
+  return droppedLemmas;
 }
 
 function loadHunspellForms() {
@@ -246,7 +283,7 @@ function freqClass(n) {
 
 console.log("Reading Sloleks…");
 await loadSloleks();
-mergeAutoProper();
+const droppedLemmas = mergeAutoProper();
 const sloleksOnly = freq.size;
 console.log("Reading Hunspell (dictionary-sl)…");
 loadHunspellForms();
@@ -258,3 +295,8 @@ const bytes = encodeDawg(words, classes);
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, bytes);
 console.log(`Wrote ${OUT}: ${(bytes.length / 1e6).toFixed(2)} MB (${sloleksOnly} from Sloleks, ${words.length - sloleksOnly} Hunspell-only)`);
+
+console.log("Building morphology data…");
+const morphBytes = morph.encode(droppedLemmas);
+writeFileSync(MORPH_OUT, morphBytes);
+console.log(`Wrote ${MORPH_OUT}: ${(morphBytes.length / 1e6).toFixed(2)} MB`);

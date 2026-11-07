@@ -19,8 +19,10 @@ ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese 
 - Preverjanje črkovanja s slovarjem Sloleks 3.1 + LibreOffice (≈ 3,3 milijona oblik)
 - Opozorilo na manjkajoče strešice (npr. »drzava« → »država«)
 - Predlogi, razvrščeni po pogostosti v korpusu Gigafida
-- Preverjanje predlogov s/z in k/h
+- Preverjanje predlogov s/z in k/h (tudi pred kraticami in števili)
+- Preverjanje sklona za predlogi (»brez mizo« → »brez mize«), dvojine (»z dvema prijatelji«) in števnikov (»pet avtomobili«)
 - Preverjanje ločil in presledkov
+- Sklanjanje in spregatev: tabele vseh oblik besede (Sloleks 3.1)
 - Uporabniški slovar z možnostjo dodajanja besed
 - Branje označenega besedila na glas (TTS)
 - Predlogi za zamenjavo napačnih besed
@@ -148,6 +150,15 @@ Slovar (`src/taskpane/dict/sl.dawg`) je izpeljan iz dveh virov, podrobnosti v [s
 
 - **Sloleks 3.1**: CC BY-SA 4.0, Čibej, J. idr., CJVT UL, http://hdl.handle.net/11356/2080
 - **LibreOffice sl_SI (Hunspell)**: GPL-3.0 ALI LGPL-2.1 (vir: [LibreOffice Slovenian Dictionary Pack](https://extensions.libreoffice.org/extensions/slovenian-dictionary-pack/))
+
+## Merjenje natančnosti (korpus Šolar)
+
+Pravila za sklone, števila in predloge so preverjena na razvojnem korpusu [Šolar 3.0](http://hdl.handle.net/11356/1589) (šolski spisi z učiteljskimi popravki; licenca CC BY-NC-SA, zato ni v repozitoriju):
+
+```bash
+python3 scripts/eval/solar_extract.py Solar.TEI.zip solar.jsonl
+node scripts/eval/solar-eval.mjs solar.jsonl samples.json
+```
 
 ## Ponovna izdelava slovarja
 
