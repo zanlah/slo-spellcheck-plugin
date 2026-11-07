@@ -1,6 +1,6 @@
 # Črkovalnik — Word add-in za slovenski pravopis
 
-Dodatek za Microsoft Word (Office 365), ki preverja pravopis v slovenščini in ponuja predloge popravkov. Uporablja slovar iz projekta LibreOffice (Hunspell). Črkovalnik je nastal, ker Microsoft Office na macOS še vedno ne podpira slovenskega črkovalnika.
+Dodatek za Microsoft Word (Office 365), ki preverja pravopis v slovenščini in ponuja predloge popravkov. Uporablja besedni seznam, sestavljen iz morfološkega leksikona [Sloleks 3.1](http://hdl.handle.net/11356/2080) (CJVT UL) in slovarja LibreOffice (Hunspell) – skupaj približno 3,3 milijona besednih oblik. Črkovalnik je nastal, ker Microsoft Office na macOS še vedno ne podpira slovenskega črkovalnika.
 
 ## Klasična uporaba (za netehnične uporabnike)
 
@@ -16,7 +16,9 @@ ta skripta uporabi BASE_URL da prenese manifest.xml iz strežnika in ga prenese 
 
 ## Kaj vse je vključeno
 
-- Preverjanje črkovanja s slovenskim slovarjem (nspell)
+- Preverjanje črkovanja s slovarjem Sloleks 3.1 + LibreOffice (≈ 3,3 milijona oblik)
+- Opozorilo na manjkajoče strešice (npr. »drzava« → »država«)
+- Predlogi, razvrščeni po pogostosti v korpusu Gigafida
 - Preverjanje predlogov s/z in k/h
 - Preverjanje ločil in presledkov
 - Uporabniški slovar z možnostjo dodajanja besed
@@ -142,4 +144,15 @@ Skripta bo s strežnika prenesla ustrezen manifest.xml, ga shranila v vašo Word
 ## Licence
 
 Koda add-ina: MIT (glej [LICENSE](LICENSE)).  
-Slovenski slovar: GPL-3.0 ALI LGPL-2.1 (vir: [LibreOffice Slovenian Dictionary Pack](https://extensions.libreoffice.org/extensions/slovenian-dictionary-pack/)).
+Slovar (`src/taskpane/dict/sl.dawg`) je izpeljan iz dveh virov, podrobnosti v [src/taskpane/dict/README.md](src/taskpane/dict/README.md):
+
+- **Sloleks 3.1**: CC BY-SA 4.0, Čibej, J. idr., CJVT UL, http://hdl.handle.net/11356/2080
+- **LibreOffice sl_SI (Hunspell)**: GPL-3.0 ALI LGPL-2.1 (vir: [LibreOffice Slovenian Dictionary Pack](https://extensions.libreoffice.org/extensions/slovenian-dictionary-pack/))
+
+## Ponovna izdelava slovarja
+
+Datoteka `sl.dawg` je že v repozitoriju. Za ponovno izdelavo (npr. ob novi različici Sloleksa) prenesite `Sloleks.3.1.zip` s [CLARIN.SI](http://hdl.handle.net/11356/2080) in zaženite (potreben je ukaz `unzip`):
+
+```bash
+npm run build:dict -- /pot/do/Sloleks.3.1.zip
+```
