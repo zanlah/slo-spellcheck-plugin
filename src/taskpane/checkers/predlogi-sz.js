@@ -17,6 +17,8 @@ export function checkPreposition(text, letters, expected) {
   while ((m = re.exec(text)) !== null) {
     var prep = m[1];
     var nextWord = m[2];
+    // "ob 7. h zjutraj", "5 s": an hour/second unit after a number, not a preposition
+    if (/\d[.]?[ \t\u00A0]*$/.test(text.slice(Math.max(0, m.index - 6), m.index))) continue;
     var sound = firstSound(nextWord, text.charAt(m.index + m[0].length));
     if (!sound) continue;
     var correct = expected(sound);

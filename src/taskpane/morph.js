@@ -149,5 +149,11 @@ export function loadMorph(arrayBuffer) {
       .map((x) => paradigm(x.r));
   }
 
-  return { analyze, analyzeWord, entries, lemmaFrequency: (l) => lemmas.freqClass(l) };
+  /** Full paradigm of a record found through analyze() (its lemma string is known). */
+  function paradigmOf(lemma, record) {
+    remember(lemma);
+    return paradigm(record);
+  }
+
+  return { analyze, analyzeWord, entries, paradigmOf, lemmaFrequency: (l) => lemmas.freqClass(l) };
 }

@@ -5,8 +5,9 @@ import { checkKH } from "./checkers/predlogi-kh";
 import { checkCommas } from "./checkers/vejice";
 import { checkPunctuation } from "./checkers/locila";
 import { createSpeller } from "./speller";
-import { loadMorph } from "./morph";
-import { renderParadigms } from "./paradigm-view";
+import { loadMorph } from "./morph.js";
+import { renderParadigms } from "./paradigm-view.js";
+import { createFormChecker } from "./checkers/oblike";
 
 let spellerPromise = null;
 let morphPromise = null;
@@ -153,7 +154,7 @@ function showResults(issues) {
   issues.forEach(function (item) {
     const div = document.createElement("div");
     var extraClass = "";
-    if (item.grammarType === "predlog") extraClass = " grammar-item";
+    if (item.grammarType === "predlog" || item.grammarType === "oblika") extraClass = " grammar-item";
     else if (item.grammarType === "vejica") extraClass = " grammar-item comma-item";
     else if (item.grammarType === "ločilo") extraClass = " grammar-item punct-item";
     div.className = "result-item" + extraClass;
@@ -161,6 +162,8 @@ function showResults(issues) {
     var label = "";
     if (item.grammarType === "predlog") {
       label = '<span class="grammar-label">predlog</span>';
+    } else if (item.grammarType === "oblika") {
+      label = '<span class="grammar-label">' + escapeHtml(item.rule || "oblika") + "</span>";
     } else if (item.grammarType === "vejica") {
       label = '<span class="grammar-label comma-label">vejica</span>';
     } else if (item.grammarType === "ločilo") {
@@ -390,7 +393,21 @@ async function runSpellCheck() {
     // var commaIssues = checkCommas(text);
     // Check punctuation spacing (ločila in presledki)
     var punctIssues = checkPunctuation(text);
-    var grammarIssues = szIssues.concat(khIssues, punctIssues);
+    // Case/number after prepositions and numerals (needs the Sloleks morphology data)
+    var formIssues = [];
+    try {
+      setStatus("Preverjanje sklonov in števil…");
+      var formChecker = createFormChecker(await loadMorphology());
+      var seenForms = new Set();
+      formIssues = formChecker.check(text).filter(function (i) {
+        if (seenForms.has(i.word)) return false;
+        seenForms.add(i.word);
+        return true;
+      });
+    } catch (e) {
+      // Morphology data unavailable: the other checks still work
+    }
+    var grammarIssues = szIssues.concat(khIssues, formIssues, punctIssues);
     var allIssues = grammarIssues.concat(issues);
 
     var spellCount = issues.length;

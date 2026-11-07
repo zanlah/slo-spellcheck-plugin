@@ -23,6 +23,7 @@ The entire add-in is a single taskpane with three source files in `src/taskpane/
 - **speller.js** — Spell checking API (`check`, `correct`, `suggest`, `add`, `remove`): Hunspell-like casing rules, hyphenated compounds, user words, and the missing-diacritic heuristic (rare word whose č/š/ž variant is ≥128x more frequent).
 - **morph.js** — Reader for `dict/sl-morph.bin` (lazy-loaded): `analyzeWord(form)` returns Sloleks readings (lemma, category, case/number/gender/…), `entries(word)` returns full paradigms, most frequent first.
 - **paradigm-view.js** — Renders paradigms as tables (noun case × number, adjective gender tables per degree, verb tense × person).
+- **checkers/oblike.js** — `createFormChecker(morph).check(text)`: case after prepositions, dual after dva/dve, plural after 3–4, genitive plural after 5+. Flags a word only when no Sloleks reading fits; stops at pronouns, verbs, adverbs, capitalised names, abbreviations and numbers to keep false alarms low. Measured on Šolar with `scripts/eval/` (teachers' annotations are incomplete — review `samples.json` by hand).
 - **checkers/izgovor.js** — Spoken first sound for s/z and k/h (acronyms spelled out, numbers by their spoken form).
 - **dawg.js** — Reader for the binary word automaton: exact lookup, per-word frequency class, and weighted Damerau-Levenshtein search used for suggestions.
 - **taskpane.html** — Static HTML loaded by the taskpane. Pulls in Office.js from CDN.
